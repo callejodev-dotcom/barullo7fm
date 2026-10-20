@@ -72,6 +72,7 @@ A versión sae da liña `project(Barullo7FM VERSION …)` de `CMakeLists.txt`.
 
 ## Créditos e licenzas
 
+- **Barullo 7FM é software libre**, baixo a licenza **GNU Affero General Public License v3.0** (ficheiro `LICENSE`): podes usalo, estudalo, modificalo e compartilo; se distribúes unha versión modificada, ten que ir co seu código e coa mesma licenza. Usa JUCE 8 coa súa licenza AGPLv3.
 - O chip de son, segundo a análise do silicio de Ken Shirriff (righto.com, 2021–2022).
 - O programa da CPU, segundo o desensamblado comentado de ajxs (github.com/ajxs/yamaha_dx7_rom_disassembly).
 - O modelo das envolventes e da desafinación, medido por *Music Synthesizer for Android* (msfa), © Google Inc., coas melloras de Pascal Gauthier e Jean Pierre Cimalando (licenza Apache 2.0; o código orixinal só se usa nas probas, en `tools/msfa/`).
