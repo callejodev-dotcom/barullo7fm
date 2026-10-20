@@ -324,7 +324,8 @@ void NumBox::mouseDoubleClick (const juce::MouseEvent&)
     editor->setBounds (getLocalBounds());
     addAndMakeVisible (*editor);
     editor->grabKeyboardFocus();
-    auto finish = [this] (bool apply)
+    const juce::Component::SafePointer<NumBox> safe (this);
+    auto finish = [this, safe] (bool apply)
     {
         if (! editor) return;
         const auto t = editor->getText().trim();
@@ -334,7 +335,7 @@ void NumBox::mouseDoubleClick (const juce::MouseEvent&)
             change (t.getIntValue());
             if (onGestureEnd) onGestureEnd();
         }
-        juce::MessageManager::callAsync ([sp = juce::Component::SafePointer<NumBox> (this)] { if (sp) sp->editor.reset(); });
+        juce::MessageManager::callAsync ([safe] { if (safe != nullptr) safe->editor.reset(); });
     };
     editor->onReturnKey = [finish] { finish (true); };
     editor->onEscapeKey = [finish] { finish (false); };
