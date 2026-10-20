@@ -1,0 +1,41 @@
+KIT DE CALIBRACIÓN DE BARULLO 7FM
+Para grabar tu DX7 y ajustar Barullo 7FM hasta que suene igual.
+
+QUÉ HAY AQUÍ
+  Barullo7FM-calibracion.syx   32 sonidos de prueba (T01 … T32)
+  Barullo7FM-calibracion.mid   los toca uno a uno (unos 5 minutos)
+  Barullo7FM-32sons.mid        toca los 32 sonidos de la memoria interna: una nota y un acorde cada uno (2,5 min)
+  *-barullo.mp3                lo mismo tocado por Barullo 7FM, para que sepas qué esperar
+
+ANTES DE NADA: GUARDA TU MEMORIA INTERNA
+  Cargar el banco de prueba borra los 32 sonidos internos del DX7.
+  1. Conecta el MIDI OUT del DX7 al ordenador y pon a grabar SysEx (en el DAW o en un programa de SysEx).
+  2. En el DX7: FUNCTION y luego el botón 8, varias veces, hasta que la pantalla diga «MIDI TRANSMIT ?».
+  3. Pulsa YES. El DX7 manda sus 32 sonidos. Guarda ese archivo: es tu copia.
+  (Si tu memoria interna solo tiene la ROM1A de fábrica, ya tienes rom1a.syx.)
+
+PREPARAR EL DX7
+  - FUNCTION + botón 8 hasta «SYS INFO AVAIL» (si dice UNAVAIL, pulsa YES).
+  - MEMORY PROTECT INTERNAL en OFF.
+  - Canal MIDI de recepción: 1.
+  - Rueda de modulación al mínimo, pitch bend en el centro, sin pedales ni controlador de soplo.
+  - No toques el MASTER TUNE.
+  - El volumen del DX7 en un punto fijo (por ejemplo, al máximo) y no lo muevas en toda la grabación.
+
+GRABACIÓN 1: LAS PRUEBAS
+  1. Manda Barullo7FM-calibracion.syx al DX7. En INTERNAL 1 debe aparecer «T01 OL 99».
+  2. Saca el OUTPUT del DX7 a la entrada de línea de tu interfaz (mono). WAV a 48 kHz y 24 bits,
+     sin efectos ni compresión.
+  3. Ajusta la ganancia con el sonido 20 («T20 ALG16», el más fuerte): que no pase de −6 dB.
+  4. Pon a grabar, y que el DAW mande Barullo7FM-calibracion.mid al DX7 por el canal 1.
+     Los 3 primeros segundos son silencio a propósito: sirven para medir el ruido de fondo.
+  5. Deja que termine (unos 5 minutos) sin tocar nada.
+
+GRABACIÓN 2: LOS SONIDOS DE FÁBRICA
+  1. Manda rom1a.syx al DX7 (o tu copia, si en tu memoria interna está la ROM1A).
+  2. Graba igual, ahora con Barullo7FM-32sons.mid (2,5 minutos).
+
+Al terminar, vuelve a mandar tu copia para recuperar tus sonidos.
+
+Mándame los dos WAV tal cual, sin normalizar ni cortar. Con eso mido, sonido a sonido, en qué se separa
+Barullo 7FM de tu DX7 (niveles, brillo, envolventes, vibrato, ruido y filtro de salida) y lo ajusto.

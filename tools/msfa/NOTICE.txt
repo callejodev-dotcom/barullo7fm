@@ -1,0 +1,15 @@
+Motor de síntese FM (cartafol Source/msfa)
+
+Este cartafol contén o motor «msfa» (Music Synthesizer for Android), de Google Inc.,
+coas melloras de Pascal Gauthier (Dexed) e Jean Pierre Cimalando (portamento),
+publicado baixo a licenza Apache 2.0 (ver LICENSE-Apache-2.0.txt).
+
+  Copyright 2012-2013 Google Inc.
+  Copyright 2016-2025 Pascal Gauthier
+  Copyright 2019 Jean Pierre Cimalando
+
+Cambios feitos para Barullo 7FM:
+  - tuning.h: afinación estándar propia (substitúe a dependencia de afinacións microtonais).
+  - libMTSClient.h e ../debugger/Logger.h: substitutos baleiros (sen MTS-ESP nin rexistro).
+  - aligned_buf.h, fm_op_kernel.h: inclúese <cstdint>.
+O resto dos ficheiros vai sen modificar.

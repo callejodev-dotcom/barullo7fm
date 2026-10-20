@@ -1,0 +1,38 @@
+// Xerado por tools/clasicos.py. Non editar á man.
+#pragma once
+namespace b7 {
+static const char* const CLASICOS_DESC[32] = {
+  "Piano ac\xc3\xba""stico: golpe do martelo, corpo de tres cordas e agudos que se apagan antes.",
+  "Piano brillante para pop: m\xc3\xa1""is ataque e m\xc3\xa1""is harm\xc3\xb3""nicos ao tocar forte.",
+  "Piano el\xc3\xa9""ctrico de diapas\xc3\xb3""n: o \xc2\xab""ting\xc2\xbb"" met\xc3\xa1""lico aparece canto m\xc3\xa1""is forte tocas.",
+  "Piano el\xc3\xa9""ctrico de ling\xc3\xbc""etas: suave a pouca forza e \xc3\xa1""spero cando lle pegas.",
+  "Clavinet funky: pulsaci\xc3\xb3""n curta, nasal e moi percusiva.",
+  "Clavic\xc3\xa9""mbalo: punteo brillante de corda met\xc3\xa1""lica, sen pedal e cun apagado seco.",
+  "Celesta: campa\xc3\xad""\xc3\xb1""as de l\xc3\xa1""mina, doces e con brillo de caixa de m\xc3\xba""sica.",
+  "\xc3\x93""rgano de rodas para jazz: cinco tiradores e o clic de percusi\xc3\xb3""n ao atacar.",
+  "\xc3\x93""rgano de tubos: entra amodo, cheo de graves e cun sopro de aire nos tubos.",
+  "Acorde\xc3\xb3""n de musette: tres ling\xc3\xbc""etas lixeiramente desafinadas que baten.",
+  "Secci\xc3\xb3""n de metais: o brillo abrese co ataque, coma un sopro, e o ton sobe un chisco.",
+  "Trompeta: ataque cun pequeno ascenso de ton e vibrato que chega tarde.",
+  "Frauta traveseira: case senoidal, co aire do sopro s\xc3\xb3"" ao comezo.",
+  "Clarinete: harm\xc3\xb3""nicos impares, son oco e redondo no grave.",
+  "\xc3\x93""boe: nasal e penetrante, cunha ling\xc3\xbc""eta dobre que se oe no ataque.",
+  "Secci\xc3\xb3""n de cordas: ataque lento, arcos lixeiramente desafinados e vibrato que entra amodo.",
+  "Orquestra: cordas e metais xuntos para acordes grandes.",
+  "Coro de voces \xc2\xab""aah\xc2\xbb"": formantes suaves, ataque lento e vibrato.",
+  "Guitarra de nailon: punteo c\xc3\xa1""lido co ru\xc3\xad""do da u\xc3\xb1""a ao comezo.",
+  "Corda pulsada xaponesa: ataque met\xc3\xa1""lico, afinaci\xc3\xb3""n tensa e ca\xc3\xad""da r\xc3\xa1""pida.",
+  "Arpa: punteo redondo e limpo que vai morrendo amodo.",
+  "Baixo el\xc3\xa9""ctrico FM: golpe redondo, punteo marcado e corpo que aguanta.",
+  "Baixo de sintetizador: dente de serra cun filtro que se pecha s\xc3\xb3"".",
+  "Contrabaixo punteado: dedo sobre corda grosa, c\xc3\xa1""lido e curto.",
+  "Vibr\xc3\xa1""fono: l\xc3\xa1""mina met\xc3\xa1""lica cun motor que fai tr\xc3\xa9""molo, e golpe suave de baqueta.",
+  "Marimba: madeira golpeada, nota curta e grave chea.",
+  "Camp\xc3\xa1""s tubulares: golpe met\xc3\xa1""lico, parciais inharm\xc3\xb3""nicos e unha cola longa.",
+  "Bid\xc3\xb3""n de aceiro do Caribe: nota met\xc3\xa1""lica e redonda cun \xc2\xab""bong\xc2\xbb"" ao comezo.",
+  "Timbal de orquestra: golpe de pel grave, o ton baixa un pouco e retumba.",
+  "Solo de sintetizador: dente de serra brillante, entrada co ton desde abaixo e vibrato.",
+  "Asub\xc3\xad""o: un ton puro que sobe ao entrar, co aire dos beizos.",
+  "Despegue: un motor de reacci\xc3\xb3""n que arrinca, sobe e se vai.",
+};
+}
