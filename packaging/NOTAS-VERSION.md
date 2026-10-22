@@ -4,6 +4,8 @@
 - Editor dos seis operadores, algoritmos, LFO e envolvente de ton.
 - Recibe bancos, sons e cambios de parámetro por SysEx.
 
+**Novidades na 0.2.0**: presets propios (botón PRESETS no panel de FUNCIÓN: gardan todo, tamén a memoria interna e o .syx aberto; van en Documentos/Barullo 7FM/Presets), A/B para comparar dous xogos de axustes e desfacer e refacer (as edicións do son, o algoritmo, o nome, os operadores e escoller son ou cartucho). O son non cambia.
+
 **Novidades na 0.1.1**: aviso das versións novas. Unha vez ao día pregúntase a GitHub cal é a última versión (sen mandar ningún dato) e, se hai unha nova, avísase debaixo de ESCOITA. cunha ligazón ás descargas. Co clic dereito en ESCOITA. vese a versión que tes, ábrense as descargas e desactívase o aviso. En Linux, de momento, non avisa.
 E na versión publicada da 0.1.0 faltaba o .zip do Mac; nesta vai.
 
