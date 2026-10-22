@@ -1,6 +1,7 @@
 // Proba sen interface: sons de todos os cartuchos, independencia do tamaño de bloque,
 // SysEx recibido polo MIDI, gardar/recuperar o estado e capturas da interface.
 #include <juce_audio_formats/juce_audio_formats.h>
+#include <cstring>
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -77,6 +78,47 @@ static juce::AudioBuffer<float> run (int cart, int blockSize, double sr, double*
             const int a = (int) ((v * per) * sr), b = juce::jmin (total, (int) (((v + 1) * per) * sr));
             peakPerVoice[v] = out.getMagnitude (0, a, b - a);
         }
+    return out;
+}
+
+// pegada da saída: FNV-1a de 64 bits das mostras (para comprobar que un cambio de
+// organización non cambia nin un bit do son)
+static uint64_t pegada (const juce::AudioBuffer<float>& b, uint64_t h = 1469598103934665603ULL)
+{
+    for (int c = 0; c < b.getNumChannels(); ++c)
+        for (int i = 0; i < b.getNumSamples(); ++i)
+        {
+            uint32_t u; const float x = b.getSample (c, i);
+            std::memcpy (&u, &x, sizeof (u));
+            for (int k = 0; k < 4; ++k) { h ^= (u >> (8 * k)) & 0xffu; h *= 1099511628211ULL; }
+        }
+    return h;
+}
+
+// forte: dezaseis notas a tope co volume a +6 dB, para que traballe o limitador
+static juce::AudioBuffer<float> loud (int blockSize)
+{
+    const double sr = 48000;
+    B7Processor p;
+    if (auto* v = p.apvts.getParameter ("volume")) v->setValueNotifyingHost (v->convertTo0to1 (6.0f));
+    p.setPlayConfigDetails (0, 2, sr, blockSize);
+    p.prepareToPlay (sr, blockSize);
+    p.selectSource (0);
+    p.selectVoice (0);
+    const int total = (int) (3.0 * sr);
+    juce::AudioBuffer<float> out (2, total), buf (2, blockSize);
+    for (int pos = 0; pos < total; pos += blockSize)
+    {
+        const int n = juce::jmin (blockSize, total - pos);
+        juce::MidiBuffer midi;
+        if (pos == 0) for (int k = 0; k < 16; ++k) midi.addEvent (juce::MidiMessage::noteOn (1, 40 + 3 * k, (juce::uint8) 127), 0);
+        if (pos <= (int) (2.0 * sr) && (int) (2.0 * sr) < pos + n)
+            for (int k = 0; k < 16; ++k) midi.addEvent (juce::MidiMessage::noteOff (1, 40 + 3 * k), (int) (2.0 * sr) - pos);
+        buf.setSize (2, n, false, false, true);
+        buf.clear();
+        p.processBlock (buf, midi);
+        for (int c = 0; c < 2; ++c) out.copyFrom (c, pos, buf, c, 0, n);
+    }
     return out;
 }
 
@@ -203,6 +245,12 @@ int main (int argc, char** argv)
                      c1, a.getNumSamples() / 48000.0, a.getNumSamples() / 48000.0 / c1, d);
         fails += d < 1.0e-5f ? 0 : 1;
         if (argc > 1) writeWav (juce::File (juce::String (argv[1])), a, 48000);
+    }
+    {   // a pegada da saída (ROM1A e o forte, co limitador traballando)
+        double cpu = 0;
+        const auto a = run (0, 512, 48000, &cpu);
+        const auto f = loud (512);
+        std::printf ("pegada da saída: %016llx (forte: pico %.4f)\n", (unsigned long long) pegada (f, pegada (a)), (double) f.getMagnitude (0, 0, f.getNumSamples()));
     }
     int numCarts = b7::NUM_CARTRIDGES;
     if (const char* dir = std::getenv ("B7_CARTUCHOS"))   // carpeta de cartuchos: recoñecemento dos bancos coñecidos
