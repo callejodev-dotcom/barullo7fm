@@ -12,6 +12,7 @@ trap 'echo "::error::$(basename "$0") línea $LINENO: $BASH_COMMAND"' ERR
 ART="$1"; VER="$2"; OUT="$3"
 NAME="Barullo 7FM"
 mkdir -p "$OUT"
+OUT="$(cd "$OUT" && pwd)"   # ruta absoluta: o .zip faise desde outra carpeta e, con «dist», quedaba fóra
 WORK="$(mktemp -d)"
 ROOT="$WORK/root"
 mkdir -p "$ROOT/Library/Audio/Plug-Ins/VST3" "$ROOT/Library/Audio/Plug-Ins/Components" "$ROOT/Applications"
