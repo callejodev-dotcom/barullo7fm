@@ -23,17 +23,11 @@ juce::Font body (float s) { return juce::Font (juce::FontOptions (tf (0)).withHe
 juce::Font bold (float s) { return juce::Font (juce::FontOptions (tf (1)).withHeight (s)); }
 juce::Font cond (float s) { return juce::Font (juce::FontOptions (tf (2)).withHeight (s)); }
 
-static juce::String upper (const juce::String& s)
-{
-    return s.toUpperCase().replace (U ("á"), U ("Á")).replace (U ("é"), U ("É")).replace (U ("í"), U ("Í"))
-            .replace (U ("ó"), U ("Ó")).replace (U ("ú"), U ("Ú")).replace (U ("ñ"), U ("Ñ"));
-}
-
 // a LCD só ten ASCII: sen tiles
 static juce::String lcdText (const juce::String& s)
 {
     juce::String o;
-    for (auto c : upper (s))
+    for (auto c : escoita::maiusculas (s))
     {
         switch (c)
         {
@@ -119,7 +113,7 @@ void Look::drawButtonBackground (juce::Graphics& g, juce::Button& b, const juce:
 void Look::drawButtonText (juce::Graphics& g, juce::TextButton& b, bool, bool)
 {
     auto r = b.getLocalBounds().toFloat();
-    printed (g, upper (b.getButtonText()), r.reduced (6.0f, 0), 13.0f,
+    printed (g, escoita::maiusculas (b.getButtonText()), r.reduced (6.0f, 0), 13.0f,
              col::print.withAlpha (b.isEnabled() ? 1.0f : 0.4f), juce::Justification::centred, 0.07f);
 }
 
@@ -1080,7 +1074,7 @@ MainView::MainView (B7Processor& p)
     escoita.setWantsKeyboardFocus (false);
     addAndMakeVisible (escoita);
     escoita.onMenu = [this] { showEscoitaMenu(); };
-    updateBtn.onClick = [] { juce::URL (actualizacions::downloadsUrl()).launchInDefaultBrowser(); };
+    updateBtn.onClick = [] { juce::URL (escoita::Actualizacions::downloadsUrl()).launchInDefaultBrowser(); };
     addChildComponent (updateBtn);
     refreshUpdate();
 
@@ -1099,16 +1093,16 @@ void MainView::refreshUpdate()
     if (v == updateBtn.version && updateBtn.isVisible() == v.isNotEmpty()) return;
     updateBtn.version = v;
     updateBtn.setTitle (U ("Hai unha versión nova: ") + v);
-    updateBtn.setTooltip (U ("Tes a ") + BARULLO_VERSION + U (". Abre a páxina de descargas para baixar a ") + v + ".");
+    updateBtn.setTooltip (U ("Tes a ") + ESCOITA_VERSION + U (". Abre a páxina de descargas para baixar a ") + v + ".");
     updateBtn.setVisible (v.isNotEmpty());
 }
 
 void MainView::showEscoitaMenu()
 {
     juce::PopupMenu m;
-    m.addSectionHeader (U ("Barullo 7FM ") + BARULLO_VERSION);
+    m.addSectionHeader (U ("Barullo 7FM ") + ESCOITA_VERSION);
     m.addItem (U ("Abrir escoita.link"), [] { juce::URL ("https://www.escoita.link").launchInDefaultBrowser(); });
-    m.addItem (U ("Descargas e versións"), [] { juce::URL (actualizacions::downloadsUrl()).launchInDefaultBrowser(); });
+    m.addItem (U ("Descargas e versións"), [] { juce::URL (escoita::Actualizacions::downloadsUrl()).launchInDefaultBrowser(); });
     m.addSeparator();
     m.addItem (U ("Avisar das versións novas"), true, updates->enabled(), [sp = juce::Component::SafePointer<MainView> (this)]
     {

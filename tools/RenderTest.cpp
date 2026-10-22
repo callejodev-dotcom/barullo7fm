@@ -187,7 +187,7 @@ int main (int argc, char** argv)
         fails += ok ? 0 : 1;
     }
     {   // o aviso das versións novas compara os números, non o texto (0.10 vai despois de 0.9)
-        using actualizacions::isNewer;
+        const auto isNewer = escoita::versionNova;
         const bool ok = isNewer ("v0.1.1", "0.1.0") && isNewer ("0.10.0", "0.9.9") && isNewer ("1.0", "0.9.9")
                         && ! isNewer ("v0.1.0", "0.1.0") && ! isNewer ("0.0.9", "0.1.0") && ! isNewer ("", "0.1.0") && ! isNewer ("lixo", "0.1.0");
         std::printf ("versións novas: comparación dos números: %s\n", ok ? "OK" : "FALLO");

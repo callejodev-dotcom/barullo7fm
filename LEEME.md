@@ -48,8 +48,8 @@ Avisan porque os instaladores non levan sinatura de pago, non porque haxa nada r
 | `Source/Cartuchos.h` | Os bancos que van dentro e a táboa de bancos coñecidos (só pegadas e nomes; xerado por `tools/cartuchos.py`) |
 | `Source/BancoClasicos.h`, `Source/Banco.h` | Descricións dos sons propios (xerados por `tools/clasicos.py` e `tools/banco.py`) |
 | `Source/Plugin*.cpp` | O plugin JUCE e a interface |
-| `Source/Actualizacions.cpp` | O aviso das versións novas (unha pregunta ao día a GitHub, nun fío aparte) |
-| `packaging/` | Instaladores para Mac, Windows e Linux |
+| `packaging/` | Os datos do produto (`produto.env`), os LEEME dos instaladores e as notas da versión; os instaladores e a CI son do núcleo común, [escoita-nucleo](https://github.com/callejodev-dotcom/escoita-nucleo) (versión fixada en `CMakeLists.txt`, `ESCOITA_NUCLEO_VERSION`, e en `.github/workflows/build.yml`) |
+| `tools/probas-ci.sh` | As probas que pasa a CI en cada sistema |
 | `tools/RenderTest.cpp` | Proba sen interface |
 | `tools/enginetest.cpp` | Compara o motor co anterior (msfa, en `tools/msfa/`): afinación, niveis, espectros |
 
