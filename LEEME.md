@@ -36,7 +36,7 @@ Avisan porque os instaladores non levan sinatura de pago, non porque haxa nada r
   - **A/B**: dous xogos de axustes para comparar; cambiar de lado garda o actual;
   - **desfacer e refacer** (as frechas): os parámetros do son, o algoritmo, o nome, os operadores, o son inicial, escoller son ou cartucho, gardar na interna, abrir un `.syx` e os presets e o A/B. Cada clic é un paso.
 - **Saída**: mono (como o orixinal) en estéreo, volume e limitador de seguridade a −1 dBFS.
-- **Versións novas**: unha vez ao día, pregúntase a GitHub cal é a última versión (sen mandar ningún dato) e, se hai unha nova, avísase debaixo de ESCOITA. cunha ligazón ás descargas. Co clic dereito en ESCOITA. vese a versión que tes, ábrense as descargas e desactívase o aviso. En Linux, de momento, non avisa (JUCE vai sen curl).
+- **Versións novas**: unha vez ao día, pregúntase a GitHub cal é a última versión (sen mandar ningún dato) e, se hai unha nova, avísase debaixo de ESCOITA. cunha ligazón ás descargas. Co clic dereito en ESCOITA. vese a versión que tes, ábrense as descargas e desactívase o aviso. En Linux pregúntase co curl ou o wget do sistema.
 
 ## Estrutura
 
