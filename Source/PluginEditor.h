@@ -199,6 +199,14 @@ namespace ui
         juce::String version;
     };
 
+    // desfacer / refacer: unha tecla de membrana cunha frecha en arco
+    struct ArrowKey : juce::Button
+    {
+        explicit ArrowKey (bool r) : juce::Button (r ? "refacer" : "desfacer"), isRedo (r) {}
+        void paintButton (juce::Graphics&, bool over, bool down) override;
+        bool isRedo;
+    };
+
     class MainView : public juce::Component, private juce::Timer
     {
     public:
@@ -212,6 +220,7 @@ namespace ui
         void showMessage (const juce::String& m);                         // aviso de texto baixo a LCD
         juce::MidiKeyboardComponent& keys() { return keyboard; }
         void timerCallback() override;
+        void mouseDown (const juce::MouseEvent&) override;   // (global) cada clic, un paso de desfacer
 
     private:
         void paintPanel (juce::Graphics&);
@@ -228,6 +237,11 @@ namespace ui
         int updateTick = 0;
         void refreshUpdate();
         void showEscoitaMenu();
+        // presets propios, A/B e desfacer (do núcleo), na función
+        juce::TextButton presetsBtn, abBtn[2];
+        ArrowKey undoBtn { false }, redoBtn { true };
+        void showPresetsMenu();
+        void refreshState();
         juce::Slider volume { juce::Slider::LinearVertical, juce::Slider::NoTextBox };
         NumBox bendBox { 0, 12 }, wheelBox { 0, 99 }, wheelP { 0, 1 }, wheelA { 0, 1 }, wheelE { 0, 1 };
         std::unique_ptr<juce::ParameterAttachment> bendAtt, wheelAtt, wpAtt, waAtt, weAtt;

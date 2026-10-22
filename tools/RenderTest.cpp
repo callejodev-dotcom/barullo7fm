@@ -228,6 +228,60 @@ int main (int argc, char** argv)
         std::printf ("estado gardado/recuperado: %s (%d bytes)\n", ok ? "OK" : "FALLO", (int) mb.getSize());
         fails += ok ? 0 : 1;
     }
+    auto volume = [] (B7Processor& p) { auto* v = p.apvts.getParameter ("volume"); return v->convertFrom0to1 (v->getValue()); };
+    auto setVolume = [] (B7Processor& p, float db) { auto* v = p.apvts.getParameter ("volume"); v->setValueNotifyingHost (v->convertTo0to1 (db)); };
+    {   // A/B (do núcleo): o son editado, a memoria e os parámetros, cada lado cos seus
+        B7Processor p;
+        p.selectSource (1); p.selectVoice (3); p.setParam (3, 12);
+        const auto editA = p.getEdit();
+        p.estado.cambiarLado();                                   // B: copia de A
+        bool ok = p.estado.lado() == 1 && p.getSource() == 1 && p.getVoiceNum() == 3 && p.getEdit() == editA;
+        p.selectSource (0); p.selectVoice (9); p.setParam (5, 40); setVolume (p, -6.0f);
+        const auto editB = p.getEdit();
+        p.estado.cambiarLado();                                   // volve a A
+        ok = ok && p.estado.lado() == 0 && p.getSource() == 1 && p.getVoiceNum() == 3 && p.getEdit() == editA && std::abs (volume (p)) < 0.01f;
+        p.estado.cambiarLado();                                   // B outra vez
+        ok = ok && p.estado.lado() == 1 && p.getSource() == 0 && p.getVoiceNum() == 9 && p.getEdit() == editB && std::abs (volume (p) + 6.0f) < 0.01f;
+        std::printf ("A/B (son editado, memoria e parámetros): %s\n", ok ? "OK" : "FALLO");
+        fails += ok ? 0 : 1;
+    }
+    {   // presets propios (do núcleo): gárdano todo e cárgano igual
+        B7Processor p;
+        const auto dir = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("barullo7fm_presets_proba");
+        dir.deleteRecursively();
+        p.estado.setCarpeta (dir);
+        p.selectSource (1); p.selectVoice (5); p.setParam (10, 33); p.storeTo (2); p.setParam (11, 7); setVolume (p, -3.0f);
+        const auto edit = p.getEdit(); const auto mem2 = p.voiceAt (B7Processor::INTERNAL, 2);
+        const bool saved = p.estado.gardar ("Proba: 7FM/1");
+        p.selectSource (0); p.selectVoice (0); p.initVoice(); setVolume (p, 0.0f);
+        const auto list = p.estado.presets();
+        const bool loaded = list.size() == 1 && list[0].hasFileExtension ("b7preset") && p.estado.cargar (list[0]);
+        const bool same = p.getSource() == B7Processor::INTERNAL && p.getVoiceNum() == 2 && p.getEdit() == edit
+                          && p.voiceAt (B7Processor::INTERNAL, 2) == mem2 && std::abs (volume (p) + 3.0f) < 0.01f;
+        std::printf ("presets propios: gardado %d, na carpeta %d (%s), cargado %d: %s\n", (int) saved, list.size(),
+                     list.isEmpty() ? "" : list[0].getFileName().toRawUTF8(), (int) loaded, saved && loaded && same ? "OK" : "FALLO");
+        fails += saved && loaded && same ? 0 : 1;
+        dir.deleteRecursively();
+    }
+    {   // desfacer e refacer: un parámetro do son e un cambio de son, cada un no seu paso
+        B7Processor p;
+        p.selectSource (1); p.selectVoice (0);
+        const int v0 = p.getEdit()[3], v1 = (v0 + 10) % 100;
+        p.estado.novoPaso(); p.editar ("parámetro", [&] { p.setParam (3, v1); });
+        p.estado.novoPaso(); p.cambiarMemoria ("son", [&] { p.selectVoice (7); });
+        p.estado.novoPaso();
+        const bool despois = p.getVoiceNum() == 7;
+        p.undo.undo();
+        const bool d1 = p.getVoiceNum() == 0 && p.getEdit()[3] == v1;
+        p.undo.undo();
+        const bool d2 = p.getEdit()[3] == v0;
+        p.undo.redo(); p.undo.redo();
+        const bool r = p.getVoiceNum() == 7;
+        p.undo.undo();
+        const bool r2 = p.getVoiceNum() == 0 && p.getEdit()[3] == v1;
+        std::printf ("desfacer e refacer (parámetro do son e cambio de son): %s\n", despois && d1 && d2 && r && r2 ? "OK" : "FALLO");
+        fails += despois && d1 && d2 && r && r2 ? 0 : 1;
+    }
     {   // o aviso das versións novas compara os números, non o texto (0.10 vai despois de 0.9)
         const auto isNewer = escoita::versionNova;
         const bool ok = isNewer ("v0.1.1", "0.1.0") && isNewer ("0.10.0", "0.9.9") && isNewer ("1.0", "0.9.9")

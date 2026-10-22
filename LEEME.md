@@ -31,6 +31,10 @@ Avisan porque os instaladores non levan sinatura de pago, non porque haxa nada r
   - cambio de programa = memoria 1–32;
   - **SysEx**: un banco recibido vai á memoria interna; un son, ao búfer de edición. Os cambios de parámetro que manda o teclado ao mover o deslizador de datos aplícanse ao momento.
 - **Función**: alcance do bend e da roda de modulación, e a que se aplica a roda (ton, amplitude, envolvente).
+- **Presets propios, A/B e desfacer** (do núcleo común, na función):
+  - **PRESETS**: garda e carga todo (o son coas túas edicións, a memoria interna, o `.syx` aberto e a función) en ficheiros `.b7preset`, en Documentos/Barullo 7FM/Presets; no mesmo menú, abrir a carpeta e copiar entre A e B;
+  - **A/B**: dous xogos de axustes para comparar; cambiar de lado garda o actual;
+  - **desfacer e refacer** (as frechas): os parámetros do son, o algoritmo, o nome, os operadores, o son inicial, escoller son ou cartucho, gardar na interna, abrir un `.syx` e os presets e o A/B. Cada clic é un paso.
 - **Saída**: mono (como o orixinal) en estéreo, volume e limitador de seguridade a −1 dBFS.
 - **Versións novas**: unha vez ao día, pregúntase a GitHub cal é a última versión (sen mandar ningún dato) e, se hai unha nova, avísase debaixo de ESCOITA. cunha ligazón ás descargas. Co clic dereito en ESCOITA. vese a versión que tes, ábrense as descargas e desactívase o aviso. En Linux, de momento, non avisa (JUCE vai sen curl).
 
@@ -62,6 +66,8 @@ Avisan porque os instaladores non levan sinatura de pago, non porque haxa nada r
 - **Bloques**: con bloques de 512 e de 37 mostras o resultado é o mesmo.
 - **SysEx**: banco e cambio de parámetro recibidos polo MIDI.
 - **Estado**: memoria interna, cartucho aberto, son editado e tamaño da xanela gárdanse e recupéranse iguais.
+- **A/B, presets propios e desfacer**: cada lado garda o seu son editado, a súa memoria e os seus parámetros; un preset gardado cárgase igual; desfanse e refanse un parámetro do son e un cambio de son.
+- **Pegada da saída**: FNV-1a de 64 bits das mostras dun render fixo (ROM1A e un forte co limitador traballando), para comprobar que un cambio de organización non cambia nin un bit do son.
 - **Validación**: pluginval ao nivel máximo (10), con probas de interface; auval no Mac.
 
 ## Publicar unha versión

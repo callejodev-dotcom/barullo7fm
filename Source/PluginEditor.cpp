@@ -511,11 +511,11 @@ SoundsPage::SoundsPage (B7Processor& p, MainView& m) : proc (p), main (m)
         {
             if (storeMode)
             {
-                proc.storeTo (i);
+                proc.cambiarMemoria (U ("gardar na interna"), [&] { proc.storeTo (i); });
                 storeMode = false; storeBtn.setToggleState (false, juce::dontSendNotification);
                 main.showMessage (U ("Gardado na memoria interna, posición ") + juce::String (i + 1) + ".");
             }
-            else proc.selectVoice (i);
+            else proc.cambiarMemoria (U ("son"), [&] { proc.selectVoice (i); });
             refresh();
             main.keys().grabKeyboardFocus();
         };
@@ -532,7 +532,7 @@ SoundsPage::SoundsPage (B7Processor& p, MainView& m) : proc (p), main (m)
             const auto f = fc.getResult();
             if (f == juce::File()) return;
             juce::String msg;
-            proc.loadSyxFile (f, msg);
+            proc.cambiarMemoria (U ("abrir .syx"), [&] { proc.loadSyxFile (f, msg); });
             main.showMessage (msg);
             refresh();
         });
@@ -561,7 +561,7 @@ SoundsPage::SoundsPage (B7Processor& p, MainView& m) : proc (p), main (m)
             U ("Copiar"), U ("Cancelar"), this, juce::ModalCallbackFunction::create ([this] (int r)
             {
                 if (r == 0) return;
-                proc.copySourceToInternal();
+                proc.cambiarMemoria (U ("copiar na interna"), [&] { proc.copySourceToInternal(); });
                 main.showMessage (U ("Copiado na memoria interna."));
                 refresh();
             }));
@@ -634,7 +634,7 @@ void SoundsPage::listBoxItemClicked (int row, const juce::MouseEvent&)
     if (src == FOLDER_ROW) { chooseFolder(); return; }
     if (src == B7Processor::FILE_CART && ! proc.hasFileCart()) { openBtn.triggerClick(); return; }
     if (storeMode) { storeMode = false; storeBtn.setToggleState (false, juce::dontSendNotification); main.showMessage ({}); }
-    proc.selectSource (src);
+    proc.cambiarMemoria (U ("cartucho"), [&] { proc.selectSource (src); });
     refresh();
     main.keys().grabKeyboardFocus();
 }
@@ -747,7 +747,7 @@ NumBox* EditPage::add (int index, int mn, int mx, const juce::String& lcd, const
     if (index >= 0)
     {
         bound.push_back ({ b, index });
-        b->onChange = [this, index] (int v) { proc.setParam (index, v); };
+        b->onChange = [this, index] (int v) { proc.editar (U ("parámetro"), [&] { proc.setParam (index, v); }); };
     }
     b->onTouch = [this] (NumBox& nb) { main.showParam (nb.lcdName, nb.text()); };
     addAndMakeVisible (b);
@@ -756,7 +756,7 @@ NumBox* EditPage::add (int index, int mn, int mx, const juce::String& lcd, const
 
 EditPage::EditPage (B7Processor& p, MainView& m) : proc (p), main (m)
 {
-    strip.onPick = [this] (int a) { proc.setParam (134, a); main.showParam ("ALGORITMO", juce::String (a + 1)); };
+    strip.onPick = [this] (int a) { proc.editar (U ("algoritmo"), [&] { proc.setParam (134, a); }); main.showParam ("ALGORITMO", juce::String (a + 1)); };
     strip.setTooltip (U ("Os 32 algoritmos: como se conectan os seis operadores. Os verdes soan (portadores); os outros modulan os de debaixo. A liña verde é a realimentación."));
     addAndMakeVisible (strip);
 
@@ -778,7 +778,7 @@ EditPage::EditPage (B7Processor& p, MainView& m) : proc (p), main (m)
     nameEd.setFont (cond (17.0f));
     nameEd.setInputRestrictions (10, " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}");
     nameEd.setTooltip (U ("Nome do son (10 caracteres, como no DX7)."));
-    nameEd.onTextChange = [this] { proc.setVoiceName (nameEd.getText()); };
+    nameEd.onTextChange = [this] { proc.editar (U ("nome"), [this] { proc.setVoiceName (nameEd.getText()); }); };
     nameEd.onReturnKey = [this] { main.keys().grabKeyboardFocus(); };
     addAndMakeVisible (nameEd);
 
@@ -790,7 +790,7 @@ EditPage::EditPage (B7Processor& p, MainView& m) : proc (p), main (m)
         auto* sw = add (-1, 0, 1, o + "ACESO", U ("Acende ou apaga este operador (para escoitar cada parte do son)."),
                         [opn] (int v) { return "OP" + juce::String (opn) + (v ? "" : " -"); });
         sw->small = false;
-        sw->onChange = [this, opn] (int v) { proc.setOpEnabled (opn, v != 0); };
+        sw->onChange = [this, opn] (int v) { proc.editar (U ("operador"), [&] { proc.setOpEnabled (opn, v != 0); }); };
         opSwitch[(size_t) row] = sw;
         add (base + 17, 0, 1, o + "MODO", U ("Modo de frecuencia: RAZÓN segue o teclado (múltiplo da nota); FIXA dá sempre a mesma frecuencia."),
              [] (int v) { return v ? U ("FIXA") : U ("RAZÓN"); });
@@ -816,10 +816,10 @@ EditPage::EditPage (B7Processor& p, MainView& m) : proc (p), main (m)
 
     initBtn.setButtonText (U ("Son inicial"));
     initBtn.setTooltip (U ("Empeza desde cero: só o OP1, onda senoidal (o «INIT VOICE»)."));
-    initBtn.onClick = [this] { proc.initVoice(); main.showMessage (U ("Son inicial cargado.")); };
+    initBtn.onClick = [this] { proc.editar (U ("son inicial"), [this] { proc.initVoice(); }); main.showMessage (U ("Son inicial cargado.")); };
     revertBtn.setButtonText (U ("Desfacer cambios"));
     revertBtn.setTooltip (U ("Volve ao son tal e como está gardado na memoria."));
-    revertBtn.onClick = [this] { proc.revert(); main.showMessage (U ("Cambios desfeitos.")); };
+    revertBtn.onClick = [this] { proc.editar (U ("desfacer cambios"), [this] { proc.revert(); }); main.showMessage (U ("Cambios desfeitos.")); };
     saveVoiceBtn.setButtonText (U ("Gardar son .syx"));
     saveVoiceBtn.setTooltip (U ("Garda só este son nun .syx (formato de un son do DX7)."));
     saveVoiceBtn.onClick = [this]
@@ -844,7 +844,7 @@ EditPage::EditPage (B7Processor& p, MainView& m) : proc (p), main (m)
             const auto f = fc.getResult();
             if (f == juce::File()) return;
             juce::String msg;
-            proc.loadSyxFile (f, msg);
+            proc.cambiarMemoria (U ("abrir .syx"), [&] { proc.loadSyxFile (f, msg); });
             main.showMessage (msg);
         });
     };
@@ -1066,6 +1066,28 @@ MainView::MainView (B7Processor& p)
     addChildComponent (sounds);
     addChildComponent (editor);
 
+    // presets propios, A/B e desfacer (do núcleo común)
+    presetsBtn.setButtonText ("Presets");
+    presetsBtn.setTooltip (U ("Presets propios: gardan todo (o son, a memoria interna, o .syx aberto e a función). Aquí tamén: abrir a carpeta e copiar entre A e B."));
+    presetsBtn.onClick = [this] { showPresetsMenu(); };
+    for (int i = 0; i < 2; ++i)
+    {
+        abBtn[i].setButtonText (i == 0 ? "A" : "B");
+        abBtn[i].setTooltip (U ("A/B: dous xogos de axustes para comparar (o son, a memoria e a función). Cambiar de lado garda o actual; para copiar un lado no outro, no menú dos presets."));
+        abBtn[i].onClick = [this, i] { if (i != proc.estado.lado()) proc.estado.cambiarLado(); refreshState(); };
+    }
+    undoBtn.setTooltip (U ("Desfacer o último cambio (do son, da memoria ou da función)."));
+    redoBtn.setTooltip (U ("Refacer."));
+    undoBtn.setTitle (U ("Desfacer")); redoBtn.setTitle (U ("Refacer"));
+    undoBtn.onClick = [this] { proc.undo.undo(); refreshState(); };
+    redoBtn.onClick = [this] { proc.undo.redo(); refreshState(); };
+    for (juce::Button* b : { (juce::Button*) &presetsBtn, (juce::Button*) &abBtn[0], (juce::Button*) &abBtn[1], (juce::Button*) &undoBtn, (juce::Button*) &redoBtn })
+    {
+        b->setWantsKeyboardFocus (false);
+        addAndMakeVisible (b);
+    }
+    juce::Desktop::getInstance().addGlobalMouseListener (this);
+
     escoita.setButtonText ("ESCOITA.");
     escoita.setURL (juce::URL ("https://www.escoita.link"));
     escoita.setFont (juce::Font (juce::FontOptions (tf (1)).withHeight (17.0f).withKerningFactor (0.16f)), false, juce::Justification::centredRight);
@@ -1082,8 +1104,46 @@ MainView::MainView (B7Processor& p)
     showPage (0);
     sounds.refresh(); editor.refresh();
     seenChanges = proc.changes.load();
+    refreshState();
     startTimerHz (30);
     timerCallback();
+}
+
+// cada clic (en calquera parte) empeza un paso novo de desfacer
+void MainView::mouseDown (const juce::MouseEvent&) { proc.estado.novoPaso(); }
+
+void MainView::showPresetsMenu()
+{
+    juce::PopupMenu m;
+    m.addSectionHeader (U ("Presets propios"));
+    proc.estado.engadirAoMenu (m, [sp = juce::Component::SafePointer<MainView> (this)] { if (sp != nullptr) sp->refreshState(); });
+    m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&presetsBtn));
+}
+
+// o lado do A/B e se hai algo que desfacer ou refacer
+void MainView::refreshState()
+{
+    for (int i = 0; i < 2; ++i) abBtn[i].setToggleState (i == proc.estado.lado(), juce::dontSendNotification);
+    undoBtn.setEnabled (proc.undo.canUndo());
+    redoBtn.setEnabled (proc.undo.canRedo());
+}
+
+void ArrowKey::paintButton (juce::Graphics& g, bool over, bool down)
+{
+    getLookAndFeel().drawButtonBackground (g, *this, {}, over && isEnabled(), down);
+    const auto c = getLocalBounds().toFloat().getCentre().translated (0.0f, down ? 0.5f : 0.0f);
+    const float rad = 6.5f;
+    // arco de 3/4 de volta e unha punta de frecha
+    const float a0 = isRedo ? -2.4f : 2.4f, a1 = isRedo ? 1.2f : -1.2f;
+    juce::Path p;
+    p.addCentredArc (c.x, c.y + 1.0f, rad, rad, 0.0f, a0, a1, true);
+    g.setColour (col::print.withAlpha (isEnabled() ? 1.0f : 0.35f));
+    g.strokePath (p, juce::PathStrokeType (1.8f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    const juce::Point<float> tip (c.x + rad * std::sin (a1), c.y + 1.0f - rad * std::cos (a1));
+    const float dir = isRedo ? 1.0f : -1.0f;
+    juce::Path head;
+    head.addTriangle (tip.x + dir * 4.0f, tip.y, tip.x - dir * 1.5f, tip.y - 4.0f, tip.x - dir * 1.5f, tip.y + 4.0f);
+    g.fillPath (head);
 }
 
 // o aviso da versión nova: aparece cando o fío das versións sabe dunha
@@ -1125,7 +1185,7 @@ void UpdateButton::paintButton (juce::Graphics& g, bool over, bool)
     if (hasKeyboardFocus (false)) { g.setColour (col::green); g.drawRoundedRectangle (r.reduced (1.0f), 4.0f, 1.2f); }
 }
 
-MainView::~MainView() { stopTimer(); setLookAndFeel (nullptr); }
+MainView::~MainView() { juce::Desktop::getInstance().removeGlobalMouseListener (this); stopTimer(); setLookAndFeel (nullptr); }
 
 void MainView::showPage (int p)
 {
@@ -1172,6 +1232,7 @@ void MainView::updateLcd()
 void MainView::timerCallback()
 {
     if (++updateTick >= 60) { updateTick = 0; refreshUpdate(); }
+    refreshState();
     const auto ch = proc.changes.load();
     if (ch != seenChanges)
     {
@@ -1315,6 +1376,15 @@ void MainView::resized()
         bendBox.setBounds (x, y, 54, 28); x += 62;
         wheelBox.setBounds (x, y, 54, 28); x += 62;
         wheelP.setBounds (x, y, 34, 28); wheelA.setBounds (x + 36, y, 34, 28); wheelE.setBounds (x + 72, y, 30, 28);
+    }
+    {   // presets propios, A/B e desfacer: debaixo, na mesma función
+        const int y = py + 62, h = 28;
+        int x = funcArea.getX();
+        presetsBtn.setBounds (x, y, 78, h); x += 82;
+        abBtn[0].setBounds (x, y, 30, h); x += 34;
+        abBtn[1].setBounds (x, y, 30, h); x += 40;
+        undoBtn.setBounds (x, y, 34, h); x += 38;
+        redoBtn.setBounds (x, y, funcArea.getRight() - x, h);
     }
 
     // páxinas: comezan na fila dos botóns de modo
