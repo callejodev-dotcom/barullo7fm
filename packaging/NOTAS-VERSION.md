@@ -4,6 +4,8 @@
 - Editor dos seis operadores, algoritmos, LFO e envolvente de ton.
 - Recibe bancos, sons e cambios de parámetro por SysEx.
 
+**Novidades na 0.1.1**: aviso das versións novas. Unha vez ao día pregúntase a GitHub cal é a última versión (sen mandar ningún dato) e, se hai unha nova, avísase debaixo de ESCOITA. cunha ligazón ás descargas. Co clic dereito en ESCOITA. vese a versión que tes, ábrense as descargas e desactívase o aviso. En Linux, de momento, non avisa.
+
 | Sistema | Descarga |
 |---|---|
 | Mac (Apple Silicon e Intel) | `Barullo7FM-…-mac.pkg` |

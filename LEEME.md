@@ -32,6 +32,7 @@ Avisan porque os instaladores non levan sinatura de pago, non porque haxa nada r
   - **SysEx**: un banco recibido vai á memoria interna; un son, ao búfer de edición. Os cambios de parámetro que manda o teclado ao mover o deslizador de datos aplícanse ao momento.
 - **Función**: alcance do bend e da roda de modulación, e a que se aplica a roda (ton, amplitude, envolvente).
 - **Saída**: mono (como o orixinal) en estéreo, volume e limitador de seguridade a −1 dBFS.
+- **Versións novas**: unha vez ao día, pregúntase a GitHub cal é a última versión (sen mandar ningún dato) e, se hai unha nova, avísase debaixo de ESCOITA. cunha ligazón ás descargas. Co clic dereito en ESCOITA. vese a versión que tes, ábrense as descargas e desactívase o aviso. En Linux, de momento, non avisa (JUCE vai sen curl).
 
 ## Estrutura
 
@@ -47,6 +48,7 @@ Avisan porque os instaladores non levan sinatura de pago, non porque haxa nada r
 | `Source/Cartuchos.h` | Os bancos que van dentro e a táboa de bancos coñecidos (só pegadas e nomes; xerado por `tools/cartuchos.py`) |
 | `Source/BancoClasicos.h`, `Source/Banco.h` | Descricións dos sons propios (xerados por `tools/clasicos.py` e `tools/banco.py`) |
 | `Source/Plugin*.cpp` | O plugin JUCE e a interface |
+| `Source/Actualizacions.cpp` | O aviso das versións novas (unha pregunta ao día a GitHub, nun fío aparte) |
 | `packaging/` | Instaladores para Mac, Windows e Linux |
 | `tools/RenderTest.cpp` | Proba sen interface |
 | `tools/enginetest.cpp` | Compara o motor co anterior (msfa, en `tools/msfa/`): afinación, niveis, espectros |
@@ -65,7 +67,7 @@ Avisan porque os instaladores non levan sinatura de pago, non porque haxa nada r
 ## Publicar unha versión
 
 ```
-git tag v0.1.0 && git push origin v0.1.0
+git tag v0.1.1 && git push origin v0.1.1
 ```
 
 A versión sae da liña `project(Barullo7FM VERSION …)` de `CMakeLists.txt`.

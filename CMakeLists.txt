@@ -6,7 +6,7 @@ if(NOT CMAKE_OSX_ARCHITECTURES)
   set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Arquitecturas de Mac")
 endif()
 
-project(Barullo7FM VERSION 0.1.0 LANGUAGES C CXX)
+project(Barullo7FM VERSION 0.1.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -62,7 +62,8 @@ juce_add_binary_data(B7Fonts SOURCES
 
 target_sources(Barullo7FM PRIVATE
   Source/PluginProcessor.cpp
-  Source/PluginEditor.cpp)
+  Source/PluginEditor.cpp
+  Source/Actualizacions.cpp)
 
 target_include_directories(Barullo7FM PRIVATE Source)
 
@@ -72,6 +73,7 @@ if(MSVC)
 endif()
 
 target_compile_definitions(Barullo7FM PUBLIC
+  BARULLO_VERSION="${PROJECT_VERSION}"
   JUCE_WEB_BROWSER=0
   JUCE_USE_CURL=0
   JUCE_VST3_CAN_REPLACE_VST2=0
@@ -91,12 +93,12 @@ target_link_libraries(Barullo7FM
 option(BARULLO_TESTS "Compilar la prueba de render" OFF)
 if(BARULLO_TESTS)
   juce_add_console_app(B7RenderTest PRODUCT_NAME "B7RenderTest")
-  target_sources(B7RenderTest PRIVATE tools/RenderTest.cpp Source/PluginProcessor.cpp Source/PluginEditor.cpp)
+  target_sources(B7RenderTest PRIVATE tools/RenderTest.cpp Source/PluginProcessor.cpp Source/PluginEditor.cpp Source/Actualizacions.cpp)
   target_include_directories(B7RenderTest PRIVATE Source)
   if(MSVC)
     target_compile_options(B7RenderTest PRIVATE /utf-8 /bigobj)
   endif()
-  target_compile_definitions(B7RenderTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 BARULLO_NO_PLUGIN_ENTRY=1)
+  target_compile_definitions(B7RenderTest PRIVATE BARULLO_VERSION="${PROJECT_VERSION}" JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 BARULLO_NO_PLUGIN_ENTRY=1)
   target_link_libraries(B7RenderTest PRIVATE B7Fonts juce::juce_audio_utils juce::juce_audio_processors juce::juce_audio_formats
     PUBLIC juce::juce_recommended_config_flags)
 endif()

@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "PluginProcessor.h"
+#include "Actualizacions.h"
 
 namespace ui
 {
@@ -181,6 +182,23 @@ namespace ui
         float lv[6] {};
     };
 
+    // ESCOITA. (a ligazón á web); co clic dereito, un menú coa versión, as descargas e o aviso
+    // das versións novas
+    struct EscoitaLink : juce::HyperlinkButton
+    {
+        void mouseDown (const juce::MouseEvent& e) override { if (! e.mods.isPopupMenu()) juce::HyperlinkButton::mouseDown (e); else if (onMenu) onMenu(); }
+        void mouseUp (const juce::MouseEvent& e) override { if (! e.mods.isPopupMenu()) juce::HyperlinkButton::mouseUp (e); }
+        std::function<void()> onMenu;
+    };
+
+    // o aviso dunha versión nova, debaixo de ESCOITA. (unha ligazón á páxina de descargas)
+    struct UpdateButton : juce::Button
+    {
+        UpdateButton() : juce::Button ("actualizar") {}
+        void paintButton (juce::Graphics&, bool over, bool down) override;
+        juce::String version;
+    };
+
     class MainView : public juce::Component, private juce::Timer
     {
     public:
@@ -204,7 +222,12 @@ namespace ui
         juce::TooltipWindow tooltips { this, 500 };
         Lcd lcd;
         juce::TextButton tabPlay, tabEdit;
-        juce::HyperlinkButton escoita;
+        EscoitaLink escoita;
+        UpdateButton updateBtn;
+        juce::SharedResourcePointer<actualizacions::Checker> updates;
+        int updateTick = 0;
+        void refreshUpdate();
+        void showEscoitaMenu();
         juce::Slider volume { juce::Slider::LinearVertical, juce::Slider::NoTextBox };
         NumBox bendBox { 0, 12 }, wheelBox { 0, 99 }, wheelP { 0, 1 }, wheelA { 0, 1 }, wheelE { 0, 1 };
         std::unique_ptr<juce::ParameterAttachment> bendAtt, wheelAtt, wpAtt, waAtt, weAtt;
