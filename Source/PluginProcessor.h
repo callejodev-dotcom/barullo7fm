@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_basics/juce_audio_basics.h>
+#include <escoita_nucleo/escoita_nucleo.h>
 #include "Synth7.h"
 #include "Cartuchos.h"
 
@@ -42,7 +43,11 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
+    juce::UndoManager undo;   // desfacer e refacer (declárase antes ca o apvts)
     juce::AudioProcessorValueTreeState apvts;
+    // presets propios (.b7preset en Documentos/Barullo 7FM/Presets), A/B e desfacer, do núcleo
+    // común: os parámetros e mais a memoria (fonte, son, memoria interna, búfer de edición e o .syx aberto)
+    escoita::Estado estado { apvts, &undo, opcionsEstado() };
     juce::MidiKeyboardState keyboardState;
 
     // ---- memoria e edición (só desde o fío da interface) ----
@@ -73,6 +78,10 @@ public:
     void storeTo (int slot);                     // garda o búfer de edición na memoria interna
     void copySourceToInternal();                 // copia o cartucho enteiro na memoria interna
     void initVoice();
+
+    // cambios desde a interface que se poden desfacer: «f» fai o cambio cos métodos de enriba
+    void editar (const juce::String& nome, const std::function<void()>& f);          // só o búfer de edición
+    void cambiarMemoria (const juce::String& nome, const std::function<void()>& f);  // fonte, son e bancos
 
     bool loadSyxFile (const juce::File&, juce::String& message);
     bool saveBankFile (const juce::File&, int src) const;
@@ -135,6 +144,12 @@ private:
     void handleSysex (const std::vector<uint8_t>&);
     void setParamFromHost (const char* id, float value);
 
+    // a memoria enteira nun ValueTree (o «Memoria» do estado do proxecto) e volta
+    juce::ValueTree memoria() const;
+    void setMemoria (const juce::ValueTree&);
+    void setEditBuffer (const b7::Patch&);
+    escoita::Estado::Opcions opcionsEstado();
+
     std::array<b7::Patch, 32>& bankOf (int src);
     const std::array<b7::Patch, 32>& bankOf (int src) const;
 
@@ -146,8 +161,8 @@ private:
     std::atomic<float>* wheelEgParam = nullptr;
 
     double sr = 48000;
-    double limEnv = 0, limRel = 0.999, volS = 1;
-    static constexpr double CEIL = 0.891;   // −1 dBFS
+    double volS = 1;
+    escoita::Teito teito;   // limitador de seguridade a −1 dBFS, do núcleo
     int lastBend = -1, lastWheel = -1;
 
     void handleMidi (const juce::MidiMessage&);

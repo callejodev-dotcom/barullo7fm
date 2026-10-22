@@ -8,7 +8,7 @@ namespace { juce::String U (const char* s) { return juce::String::fromUTF8 (s); 
 
 B7Processor::B7Processor()
     : AudioProcessor (BusesProperties().withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts (*this, nullptr, "Barullo7FM", createLayout())
+      apvts (*this, &undo, "Barullo7FM", createLayout())
 {
     volumeParam     = apvts.getRawParameterValue ("volume");
     bendParam       = apvts.getRawParameterValue ("bend");
@@ -439,13 +439,14 @@ void B7Processor::prepareToPlay (double sampleRate, int)
         shared.patch = edit; shared.patchReset = true;
     }
     pullShared();
-    limEnv = 0;
-    limRel = std::exp (-1.0 / (0.080 * sampleRate));
+    teito.preparar (sampleRate, 0.080, 0.891);
     volS = juce::Decibels::decibelsToGain ((double) volumeParam->load());
     lastBend = lastWheel = -1;
     keyboardState.reset();
 }
 
+// O MIDI vai ao firmware do DX7 emulado: o pedal de sostemento e o reparto das 16 voces son
+// os seus (por iso aquí non se usan os do núcleo, Sostido e Voces: cambiarían o son).
 void B7Processor::handleMidi (const juce::MidiMessage& m)
 {
     if (m.isNoteOn()) synth.noteOn (m.getNoteNumber(), m.getVelocity());
@@ -503,9 +504,7 @@ void B7Processor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
     for (int i = 0; i < n; ++i)
     {
         volS += (volT - volS) * sm;
-        double x = (double) L[i] * volS;
-        limEnv = std::max (std::abs (x), limEnv * limRel);
-        if (limEnv > CEIL) x *= CEIL / limEnv;
+        const double x = teito.procesar ((double) L[i] * volS);
         L[i] = (float) x;
         peak = std::max (peak, std::abs ((float) x));
     }
@@ -518,13 +517,13 @@ void B7Processor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuff
 }
 
 // ================================================================ estado
-void B7Processor::getStateInformation (juce::MemoryBlock& destData)
+// a memoria enteira (o «Memoria» do estado do proxecto): a fonte, o son, a memoria interna, o
+// búfer de edición e o último .syx aberto. A fonte gárdase pola súa pegada: os cartuchos da
+// carpeta poden cambiar de orde.
+juce::ValueTree B7Processor::memoria() const
 {
-    auto st = apvts.copyState();
-    st.removeChild (st.getChildWithName ("Memoria"), nullptr);
     juce::ValueTree m ("Memoria");
     auto b64 = [] (const std::vector<uint8_t>& d) { return juce::Base64::toBase64 (d.data(), d.size()); };
-    // a fonte gárdase pola súa pegada: os cartuchos da carpeta poden cambiar de orde
     m.setProperty ("source", source == INTERNAL ? juce::String ("int") : source == FILE_CART ? juce::String ("file")
                              : juce::String (std::to_string (carts[(size_t) source].hash)), nullptr);
     m.setProperty ("voice", voiceNum, nullptr);
@@ -535,7 +534,91 @@ void B7Processor::getStateInformation (juce::MemoryBlock& destData)
         m.setProperty ("file", b64 (b7::bankToSysex (std::vector<b7::Patch> (fileCart.begin(), fileCart.end()))), nullptr);
         m.setProperty ("fileName", fileCartName, nullptr);
     }
-    st.appendChild (m, nullptr);
+    return m;
+}
+
+void B7Processor::setMemoria (const juce::ValueTree& m)
+{
+    if (! m.isValid()) return;
+    auto unb64 = [] (const juce::String& s)
+    {
+        juce::MemoryOutputStream out;
+        if (! juce::Base64::convertFromBase64 (out, s)) return std::vector<uint8_t>();
+        const auto* p = static_cast<const uint8_t*> (out.getData());
+        return std::vector<uint8_t> (p, p + out.getDataSize());
+    };
+    const auto in = b7::parseSysex (unb64 (m.getProperty ("internal").toString()));
+    if (in.size() >= 32) for (size_t k = 0; k < 32; ++k) internal[k] = in[k];
+    fileCartLoaded = false;
+    if (m.hasProperty ("file"))
+    {
+        const auto fc = b7::parseSysex (unb64 (m.getProperty ("file").toString()));
+        if (fc.size() >= 32) { for (size_t k = 0; k < 32; ++k) fileCart[k] = fc[k]; fileCartLoaded = true; fileCartName = m.getProperty ("fileName").toString(); }
+    }
+    const auto key = m.getProperty ("source").toString();
+    if (key == "int") source = INTERNAL;
+    else if (key == "file") source = fileCartLoaded ? FILE_CART : 0;
+    else source = juce::jmax (0, sourceForHash ((uint64_t) std::strtoull (key.toRawUTF8(), nullptr, 10)));
+    voiceNum = juce::jlimit (0, 31, (int) m.getProperty ("voice", 0));
+    const auto e = unb64 (m.getProperty ("edit").toString());
+    if (e.size() == 156)
+    {
+        std::copy (e.begin(), e.end(), edit.begin());
+        const uint8_t mask = edit[155] & 0x3f;
+        b7::sanitize (edit); edit[155] = mask;
+    }
+    else { edit = bankOf (source)[(size_t) voiceNum]; edit[155] = 0x3f; }
+    publish (true, true);
+}
+
+void B7Processor::setEditBuffer (const b7::Patch& p)
+{
+    edit = p;
+    publish (false, false);
+}
+
+escoita::Estado::Opcions B7Processor::opcionsEstado()
+{
+    escoita::Estado::Opcions o;
+    o.extension = "b7preset";
+    o.extra = [this] { return memoria(); };
+    o.aplicarExtra = [this] (const juce::ValueTree& m)
+    {
+        setMemoria (m);
+        updateHostDisplay (ChangeDetails().withProgramChanged (true));
+    };
+    return o;
+}
+
+// un cambio que se pode desfacer: gárdanse o antes e o despois. «facer» non se repite a
+// primeira vez (o cambio xa está feito); si ao refacer.
+void B7Processor::editar (const juce::String& nome, const std::function<void()>& f)
+{
+    const auto antes = edit;
+    f();
+    const auto despois = edit;
+    if (antes == despois) return;
+    auto primeira = std::make_shared<bool> (true);
+    estado.cambio (nome, [this, despois, primeira] { if (*primeira) *primeira = false; else setEditBuffer (despois); },
+                         [this, antes] { setEditBuffer (antes); });
+}
+
+void B7Processor::cambiarMemoria (const juce::String& nome, const std::function<void()>& f)
+{
+    const auto antes = memoria();
+    f();
+    const auto despois = memoria();
+    if (antes.isEquivalentTo (despois)) return;
+    auto primeira = std::make_shared<bool> (true);
+    estado.cambio (nome, [this, despois, primeira] { if (*primeira) *primeira = false; else { setMemoria (despois); updateHostDisplay (ChangeDetails().withProgramChanged (true)); } },
+                         [this, antes] { setMemoria (antes); updateHostDisplay (ChangeDetails().withProgramChanged (true)); });
+}
+
+void B7Processor::getStateInformation (juce::MemoryBlock& destData)
+{
+    auto st = apvts.copyState();
+    st.removeChild (st.getChildWithName ("Memoria"), nullptr);
+    st.appendChild (memoria(), nullptr);
     st.setProperty ("uiScale", uiScale, nullptr);
     if (auto xml = st.createXml()) copyXmlToBinary (*xml, destData);
 }
@@ -546,39 +629,8 @@ void B7Processor::setStateInformation (const void* data, int sizeInBytes)
     if (! xml || ! xml->hasTagName (apvts.state.getType())) return;
     auto tree = juce::ValueTree::fromXml (*xml);
     uiScale = juce::jlimit (0.6f, 2.0f, (float) tree.getProperty ("uiScale", 1.0f));
-    auto unb64 = [] (const juce::String& s)
-    {
-        juce::MemoryOutputStream out;
-        if (! juce::Base64::convertFromBase64 (out, s)) return std::vector<uint8_t>();
-        const auto* p = static_cast<const uint8_t*> (out.getData());
-        return std::vector<uint8_t> (p, p + out.getDataSize());
-    };
     const auto m = tree.getChildWithName ("Memoria");
-    if (m.isValid())
-    {
-        const auto in = b7::parseSysex (unb64 (m.getProperty ("internal").toString()));
-        if (in.size() >= 32) for (size_t k = 0; k < 32; ++k) internal[k] = in[k];
-        fileCartLoaded = false;
-        if (m.hasProperty ("file"))
-        {
-            const auto fc = b7::parseSysex (unb64 (m.getProperty ("file").toString()));
-            if (fc.size() >= 32) { for (size_t k = 0; k < 32; ++k) fileCart[k] = fc[k]; fileCartLoaded = true; fileCartName = m.getProperty ("fileName").toString(); }
-        }
-        const auto key = m.getProperty ("source").toString();
-        if (key == "int") source = INTERNAL;
-        else if (key == "file") source = fileCartLoaded ? FILE_CART : 0;
-        else source = juce::jmax (0, sourceForHash ((uint64_t) std::strtoull (key.toRawUTF8(), nullptr, 10)));
-        voiceNum = juce::jlimit (0, 31, (int) m.getProperty ("voice", 0));
-        const auto e = unb64 (m.getProperty ("edit").toString());
-        if (e.size() == 156)
-        {
-            std::copy (e.begin(), e.end(), edit.begin());
-            const uint8_t mask = edit[155] & 0x3f;
-            b7::sanitize (edit); edit[155] = mask;
-        }
-        else { edit = bankOf (source)[(size_t) voiceNum]; edit[155] = 0x3f; }
-        publish (true, true);
-    }
+    setMemoria (m);
     tree.removeChild (m, nullptr);
     apvts.replaceState (tree);
     updateHostDisplay (ChangeDetails().withProgramChanged (true));
