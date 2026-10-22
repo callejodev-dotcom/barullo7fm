@@ -518,8 +518,10 @@ private:
             if (m) for (int k = opn + 1; k <= 6; ++k) if ((m >> k) & 1) mod += outs[k];
             // a saída entra na fase co seu bit máis baixo no do índice da ROM (1/4096 de ciclo):
             // un modulador a todo volume move a fase ±4 ciclos
-            int phaseMod = mod << 11;
-            if (alg.fbTo == opn && fbShift < 16) phaseMod += ((V.fb0 + V.fb1) << 11) >> (fbShift + 1);
+            // (× 2048 e non << 11: as saídas son negativas a metade do tempo e en C++17 desprazar
+            // un negativo cara á esquerda non está definido; o resultado é o mesmo)
+            int phaseMod = mod * 2048;
+            if (alg.fbTo == opn && fbShift < 16) phaseMod += ((V.fb0 + V.fb1) * 2048) >> (fbShift + 1);
             const uint32_t idx = ((V.phase[(size_t) s] + (uint32_t) phaseMod) >> 11) & 0xFFF;
             int a = (int) (idx & 0x3FF);
             if (idx & 0x400) a ^= 0x3FF;
@@ -546,7 +548,7 @@ private:
         for (int b = 14; b >= 0 && ! ((u >> b) & 1); --b) ++lz;
         const int sh = lz >= 5 ? 3 : lz == 4 ? 2 : lz == 3 ? 1 : 0;
         const int drop = 3 - sh;               // bits que se perden por abaixo
-        return (v >> drop) << drop;
+        return (v >> drop) * (1 << drop);   // (v pode ser negativo: multiplicar, non desprazar)
     }
 
     // ------------------------------------------------------------ CPU: temporizador (HANDLER_OCF)
